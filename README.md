@@ -15,3 +15,47 @@ This repository contains an end-to-end customer analytics warehouse and churn in
 * **Automated Batch Pipeline:** Engineered Python extraction scripts eliminating manual data cleaning and reducing reporting overhead by 40%.
 
 ## Architecture & Data Flow
+Raw Transactions (Postgres/CSV)
+│
+▼
+[ETL & Data Cleaning Pipeline (Python)]
+│
+├─► Star Schema Data Warehouse (fact_orders, dim_customers, dim_products)
+│
+├─► RFM Segmentation Engine (Quantile Scoring & At-Risk Logic)
+│
+▼
+Executive BI Suite (Power BI / DAX Measures & Cohort Retention Heatmaps)
+## Repository Structure
+├── schema_and_queries.sql      # Star Schema DDL, indexing, LTV queries, and cohort retention SQL
+├── rfm_churn_pipeline.py       # Python ETL pipeline, quintile calculation, and segmentation logic
+├── rfm_customer_segments.csv   # Staged dimensional data output ready for Power BI
+└── README.md                   # System documentation and deployment instructions
+## DAX Measures Implemented in Power BI
+* **MoM Revenue Growth:**
+  ```dax
+  MoM_Revenue_Growth = 
+  VAR CurrentMonthRev = [Total_Net_Revenue]
+  VAR PreviousMonthRev = CALCULATE([Total_Net_Revenue], DATEADD('dim_date'[Date], -1, MONTH))
+  RETURN 
+  DIVIDE(CurrentMonthRev - PreviousMonthRev, PreviousMonthRev, 0)
+  Churn_Velocity_Pct = 
+DIVIDE(
+    CALCULATE(DISTINCTCOUNT('dim_customers'[customer_id]), 'rfm_customer_segments'[customer_segment] IN {"At-Risk (High Value Inactive)", "Can't Lose Them"}),
+    DISTINCTCOUNT('dim_customers'[customer_id]),
+    0
+)
+##Setup & Execution
+Clone the repository:
+
+Bash
+git clone [https://github.com/kishor34/Customer-Lifecycle-Churn-Intelligence-Engine.git](https://github.com/kishor34/Customer-Lifecycle-Churn-Intelligence-Engine.git)
+cd Customer-Lifecycle-Churn-Intelligence-Engine
+Execute Database Setup:
+Run schema_and_queries.sql in any PostgreSQL 14+ client.
+
+Execute RFM Pipeline:
+
+Bash
+pip install pandas numpy
+python rfm_churn_pipeline.py
